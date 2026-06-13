@@ -1,4 +1,4 @@
-#include <ft_ping.h>
+#include <ft_traceroute.h>
 
 unsigned short csum(unsigned short *buff, int words_n) {
 	uint64_t sum = 0;
@@ -9,8 +9,8 @@ unsigned short csum(unsigned short *buff, int words_n) {
 }
 
 
-void	ft_ping(struct timeval *timeout, struct timeval *interval) {
-	char		packet_out[def_packet_size], packet_in[def_packet_size];
+void	ft_traceroute(struct timeval *timeout, _data *data) {
+	/*char		packet_out[def_packet_size], packet_in[def_packet_size];
 	struct	icmphdr	*icmphdr_out;
 	struct	icmphdr	icmphdr_in;
 	struct	timeval	timeval_st;
@@ -87,4 +87,5 @@ void	ft_ping(struct timeval *timeout, struct timeval *interval) {
 			break;
 		usleep((interval->tv_sec * 1000000) + interval->tv_usec);
 	}
+	*/
 }

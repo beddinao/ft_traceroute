@@ -1,13 +1,7 @@
 #include <ft_traceroute.h>
 
-bool 	op_general_check(bool op_var, _data *data) {
-	return (op_var || data->input.version || data->input.help);
-}
-
-bool	op_verbose(int c, char **v, int *current_arg, _data* data) {
-	if (op_general_check(data->input.verbose)) return False;
-	data->input.verbose = True;
-	return True;
+bool 	op_general_check(bool op_var) {
+	return (op_var);
 }
 
 bool	op_numeric(int c, char **v, int *current_arg, _data* data) {
@@ -102,6 +96,24 @@ bool	op_nqueries(int c, char **v, int *current_arg, _data *data) {
 	return True;
 }
 
+bool	op_waittime(int c, char **v, int *current_arg, _data *data) {
+	if (op_general_check(data->input.is_set_waittime)
+		|| c - (*current_arg + 1) < 2) return False;
+	errno = 0;
+	(*current_arg)++;
+	char	*endptr;
+	long	waittime_nm = strtol(v[*current_arg], &endptr, 0xa);
+	if (errno == ERANGE
+		|| endptr == v[*current_arg] || *endptr != '\0'
+		|| waittime_nm < 0 || waittime_nm > U32_MAX) {
+		printf("invalid \"waittime\" value: %s\n", v[*current_arg]);
+		return False;
+	}
+	data->input.is_set_waittime = True;
+	data->input.waittime = waittime_nm;
+	return True;
+}
+
 bool	op_tos(int c, char **v, int *current_arg, _data *data) {
 	if (op_general_check(data->input.is_set_tos)
 		|| c - (*current_arg + 1) < 2) return False;
@@ -124,19 +136,19 @@ bool parse_params(int c, char **v, _data *data) {
 
 	bool	valid_arg;
 	char	possible_one_char_param[0x3];
-	char	*one_char_args = "-v-n-i-s-m-f-q-t";
+	char	*one_char_args = "-n-i-s-m-f-q-w-t";
 	char	*full_name_args[0x8] = {
-		"--verbose", "--numeric", "--interface", "--source-addr",
-		"--max-ttl", "--first-ttl", "--nqueries", "--tos"
+		"--numeric", "--interface", "--source-addr", "--max-ttl",
+		"--first-ttl", "--nqueries", "--waittime", "--tos"
 	};
-	bool	(*param_ops[0x8])(int, char**, int*, _data*) = {
-		op_verbose, op_numeric, op_interface, op_src_addr,
-		op_max_ttl, op_first_ttl, op_nqueries, op_tos
+	bool	(*param_ops[0x9])(int, char**, int*, _data*) = {
+		op_numeric, op_interface, op_src_addr, op_max_ttl,
+		op_first_ttl, op_nqueries, op_waittime, op_tos
 	};
 
 
 	if (c == 2 && (!strcmp(v[c-1], "-V") || !strcmp(v[c-1], "--version"))) {
-		printf("ft_traceroute: %s\n\n", ft_ping_version);
+		printf("ft_traceroute: %s\n\n", ft_traceroute_version);
 		exit(False);
 	}
 	else if (c == 2 && (!strcmp(v[c-1], "-?") || !strcmp(v[c-1], "--help")))
@@ -144,7 +156,7 @@ bool parse_params(int c, char **v, _data *data) {
 
 	for (int current_arg = 1; current_arg < c - 1; current_arg+=1) {
 		valid_arg = False;
-		for (uint8_t current_possible_param = 0; current_possible_param < 0x8; current_possible_param += 1) {
+		for (uint8_t current_possible_param = 0; current_possible_param < 0x9; current_possible_param += 1) {
 			possible_one_char_param[0] = one_char_args[current_possible_param*2];
 			possible_one_char_param[1] = one_char_args[current_possible_param*2+1];
 			possible_one_char_param[2] = '\0';

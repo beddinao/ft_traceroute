@@ -17,6 +17,9 @@
 # include <errno.h>
 # include <signal.h>
 # include <sys/time.h>
+# include <ifaddrs.h>
+# include <net/if.h>
+# include <sys/ioctl.h>
 
 // GENERAL PURPOSE MACROS
 # define ft_traceroute_version	"0x1 <foundations.>"
@@ -24,6 +27,8 @@
 # define def_packet_size		4000
 # define max_interface_len		0x10	
 # define max_addr_len		0x10
+# define def_max_ttl		30
+# define def_waittime		5
 # define def_first_ttl		1
 # define def_nqueries		3
 # define icmp_types			((const char*[]){ "echoreply", "", "", "destination_unreachable", "source_quench", "redirect_msg", "", "", "echo_request", "router_ad", "router_solic", "time_to_live_exceeded", "bad_ip_header", "timestamp", "timestamp_reply", "info_request", "info_reply", "addr_mask_request", "addr_mask_reply"})
@@ -60,7 +65,6 @@ typedef	int	bool;
 typedef	struct {
 	bool		version;		// -V / --version
 	bool		help;		// -? / --help
-	bool		verbose;		// -v / --verbose
 	bool		numeric;		// -n / --numeric
 	//
 	bool		is_set_interface;
@@ -68,6 +72,7 @@ typedef	struct {
 	bool		is_set_max_ttl;
 	bool		is_set_first_ttl;
 	bool		is_set_nqueries;
+	bool		is_set_waittime;
 	bool		is_set_tos;
 	//
 	char		interface[max_interface_len];
@@ -77,30 +82,38 @@ typedef	struct {
 	uint32_t		max_ttl;		// -m / --max-ttl
 	uint32_t		first_ttl;	// -f / --first-ttl
 	uint8_t		nqueries;		// -q / --nqueries
+	uint32_t		waittime;		// -w / --waittime
 	uint8_t		tos;		// -t / --tos
 }	_options;
 
 typedef	struct {
-	int		sock;
-	struct	addrinfo	dest;
-	struct	addrinfo	src;
-	char		*dest_ip
-	char		*src_ip;
-	uint32_t		d_addr;
+	struct	addrinfo	addr;
+	char		ip[max_addr_len];
 	uint32_t		s_addr;
+}	_src;
 
+typedef	struct {
+	struct	addrinfo	*addr;
+	char		ip[max_addr_len];
+	uint32_t		d_addr;
+}	_dest;
+
+typedef	struct {
+	int		sock;
+	_src		src;
+	_dest		dest;
 	_options		input;
 }	_data;
 
 // print.c
 void	display_help();
 void	print_outgoing_packet();
-void	print_incoming_packet(struct sockaddr_in*, unsigned short*, bool, bool);
+void	print_incoming_packet();
 
 // parse.c
-bool	parse_params(int, char**);
+bool	parse_params(int, char**, _data*);
 
-// ft_ping.c
-void	ft_traceroute(struct timeval*, struct timeval*);
+// ft_traceroute.c
+void	ft_traceroute(struct timeval*, _data*);
 
 #endif
