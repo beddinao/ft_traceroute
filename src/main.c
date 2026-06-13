@@ -71,13 +71,24 @@ bool	resolve_src_addr(_data *data) {
 	return True;
 }
 
-void	set_op_vars(_data *data, _op_vars *_op_vars) {
+void	set_op_vars(_data *data, _op_vars *op_vars) {
 	op_vars->waittime.tv_sec = data->input.is_set_waittime ? data->input.waittime : def_waittime;
 	op_vars->ttl = data->input.is_set_first_ttl ? data->input.first_ttl : def_first_ttl;
 	op_vars->max_ttl = data->input.is_set_max_ttl ? data->input.max_ttl : def_max_ttl;
 	op_vars->nqueries = data->input.is_set_nqueries ? data->input.nqueries : def_nqueries;
 	op_vars->tos = data->input.is_set_tos ? data->input.tos : def_tos;
 	op_vars->npid = htons(getpid());
+}
+
+void	enable_ip_hdr_mnp(_data *data) {
+	int	_ops_res;
+	int	_incd_ip_hdr = 1;
+	
+	_ops_res = setsockopt(data->sock, IPPROTO_IP, IP_HDRINCL, &_incd_ip_hdr, sizeof(_incd_ip_hdr));
+	if (_ops_res < 0) {
+		perror("ft_traceroute: setsockopt()");
+		exit(1);
+	}
 }
 
 bool	check_root_privileges(uid_t r, uid_t e, uid_t s) {
@@ -129,6 +140,7 @@ int main(int c, char **v) {
 	memset(&op_vars, 0, sizeof(op_vars));
 	
 	set_op_vars(&data, &op_vars);
+	enable_ip_hdr_mnp(&data);
 	ft_traceroute(&data, &op_vars);
 	return gracefull_exit(&data);
 }
