@@ -8,6 +8,70 @@ unsigned short csum(unsigned short *buff, int words_n) {
 	return (~(unsigned short)sum);
 }
 
+double/*ms*/_ping(_data* data, char *packet, char **packet_in, struct timeval *waittime) {
+	struct	timeval	tstart = {0};
+	struct	timeval	tend = {0};
+	int		_ops_res;
+	fd_set		r_set;
+
+	FD_ZERO(&r_set);
+	gettimeofday(&tstart, NULL);
+	_ops_res = sendto(
+			data->sock,
+			packet,
+			sizeof(struct iphdr) + sizeof(struct icmphdr) + 64,
+			data->dest.addr,
+			sizeof(struct addrinfo)
+	);
+	if (_ops_res < 0) {
+		perror("ft_traceroute: sendto()");
+		return _ops_res;
+	}
+	FD_SET(data->sock, &r_set);
+	_ops_res = select(
+			data->sock + 1,
+			&r_set,
+			NULL, NULL,
+			waittime
+	);
+	if (_ops_res < 0)
+		perror("ft_traceroute: select()");
+	if (_ops_res <= 0)
+		return _ops_res;
+	gettimeofday(&tend, NULL);
+}
+
+void	ft_traceroute(_data *data, _op_vars *op_vars) {
+	char		packet_out[def_packet_size];
+	char		packet_in[def_packet_size];
+	struct	iphdr	*iphdr_out, *iphdr_in;
+	struct	icmphdr	*icmphdr_out, *icmphdr_in;
+
+	size_t		icmphdr_len = sizeof(struct icmphdr);
+	size_t		iphdr_len = sizeof(struct iphdr);
+
+	for (;;) {
+		memset(packet_out, 0, def_packet_size);
+		iphdr_out = (struct iphdr*)packet_out;
+		iphdr_out->version = 4;
+		iphdr_out->id = op_vars->npid;
+		iphdr_out->ttl = op_vars->ttl;
+		iphdr_out->protocol = IPPROTO_ICMP;
+		iphdr_out->saddr = data->src.s_addr;
+		iphdr_out->daddr = data->dest.d_addr;
+
+		icmphdr_out = (struct icmphdr*)(packet_out + iphdr_len);
+		icmphdr_out->type = ICMP_ECHO;
+		icmphdr_out->un.echo.id = op_vars->npid;
+		memset(packet_out + icmphdr_len, 'a', 64);
+		icmphdr_out->checksum = csum((unsigned short*)(packet_out + iphdr_len), (icmphdr_len+64)/2);
+
+		iphdr_out->ihl = iphdr_len / 4;
+		iphdr_out->tot_len = iphdr_len + icmphdr_len + 64;
+		iphdr_out->check = csum((unsigned short*)packet, iphdr_len/2);
+
+	}
+}
 
 void	ft_traceroute(struct timeval *timeout, _data *data) {
 	/*char		packet_out[def_packet_size], packet_in[def_packet_size];

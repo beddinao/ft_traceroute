@@ -71,6 +71,15 @@ bool	resolve_src_addr(_data *data) {
 	return True;
 }
 
+void	set_op_vars(_data *data, _op_vars *_op_vars) {
+	op_vars->waittime.tv_sec = data->input.is_set_waittime ? data->input.waittime : def_waittime;
+	op_vars->ttl = data->input.is_set_first_ttl ? data->input.first_ttl : def_first_ttl;
+	op_vars->max_ttl = data->input.is_set_max_ttl ? data->input.max_ttl : def_max_ttl;
+	op_vars->nqueries = data->input.is_set_nqueries ? data->input.nqueries : def_nqueries;
+	op_vars->tos = data->input.is_set_tos ? data->input.tos : def_tos;
+	op_vars->npid = htons(getpid());
+}
+
 bool	check_root_privileges(uid_t r, uid_t e, uid_t s) {
 	return getresuid(&r, &e, &s) < 0 || e;
 }
@@ -116,13 +125,10 @@ int main(int c, char **v) {
 		|| !resolve_src_addr(&data))
 		return 1;
 
-	struct	timeval	waittime;
-	memset(&waittime, 0, sizeof(waittime));
-
-	if (data.input.is_set_waittime)
-		waittime.tv_sec = data.input.waittime;
-	else	waittime.tv_sec = def_waittime;
-
-	ft_traceroute(&data, &waittime);
+	_op_vars		op_vars;
+	memset(&op_vars, 0, sizeof(op_vars));
+	
+	set_op_vars(&data, &op_vars);
+	ft_traceroute(&data, &op_vars);
 	return gracefull_exit(&data);
 }

@@ -31,6 +31,8 @@
 # define def_waittime		5
 # define def_first_ttl		1
 # define def_nqueries		3
+# define max_nqueries_value		10
+# define def_tos			0
 # define icmp_types			((const char*[]){ "echoreply", "", "", "destination_unreachable", "source_quench", "redirect_msg", "", "", "echo_request", "router_ad", "router_solic", "time_to_live_exceeded", "bad_ip_header", "timestamp", "timestamp_reply", "info_request", "info_reply", "addr_mask_request", "addr_mask_reply"})
 
 // ANSI COLORS
@@ -99,6 +101,15 @@ typedef	struct {
 }	_dest;
 
 typedef	struct {
+	uint16_t		npid;
+	uint8_t		ttl;
+	uint8_t		max_ttl;
+	uint8_t		nqueries;
+	uint8_t		tos;
+	struct	timeval	waittime;
+}	_op_vars;
+
+typedef	struct {
 	int		sock;
 	_src		src;
 	_dest		dest;
@@ -114,6 +125,6 @@ void	print_incoming_packet();
 bool	parse_params(int, char**, _data*);
 
 // ft_traceroute.c
-void	ft_traceroute(struct timeval*, _data*);
+void	ft_traceroute(_data*, _op_vars*);
 
 #endif

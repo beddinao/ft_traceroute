@@ -91,6 +91,8 @@ bool	op_nqueries(int c, char **v, int *current_arg, _data *data) {
 		printf("invalid \"N queries\" value: %s\n", v[*current_arg]);
 		return False;
 	}
+	if (nqueries_nm > max_nqueries_value)
+		nqueries_nm = max_nqueries_value;
 	data->input.is_set_nqueries = True;
 	data->input.nqueries = nqueries_nm;
 	return True;
