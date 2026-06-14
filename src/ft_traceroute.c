@@ -8,7 +8,7 @@ unsigned short csum(unsigned short *buff, int words_n) {
 	return (~(unsigned short)sum);
 }
 
-double/*ms*/_ping(_data* data, char *packet, struct sockaddr_in *addr) {
+double/*ms*/_ping(_data* data, char *packet_out, char *packet_in, struct sockaddr_in *addr) {
 	socklen_t		addr_s = sizeof(struct sockaddr_in);
 	struct	timeval	tstart = {0}, tend = {0};
 	struct	timeval	waittime = {0};
@@ -20,8 +20,8 @@ double/*ms*/_ping(_data* data, char *packet, struct sockaddr_in *addr) {
 	gettimeofday(&tstart, NULL);
 	_ops_res = sendto(
 			data->sock,
-			packet,
-			sizeof(struct iphdr) + sizeof(struct icmphdr) + 64,
+			packet_out,
+			sizeof(struct iphdr) + sizeof(struct icmphdr) + payload_size,
 			0,
 			data->dest.addr->ai_addr,
 			sizeof(struct addrinfo)
@@ -43,10 +43,10 @@ double/*ms*/_ping(_data* data, char *packet, struct sockaddr_in *addr) {
 		return _ops_res;
 	gettimeofday(&tend, NULL);
 
-	memset(packet, 0, sizeof(def_packet_size));
+	memset(packet_in, 0, sizeof(def_packet_size));
 	_ops_res = recvfrom(
 			data->sock,
-			packet,
+			packet_in,
 			def_packet_size,
 			0,
 			addr, &addr_s
@@ -60,15 +60,11 @@ double/*ms*/_ping(_data* data, char *packet, struct sockaddr_in *addr) {
 		+ ((double)(tend.tv_usec - tstart.tv_usec) / 1000);
 }
 
-void	print_ttl(uint8_t ttl) {
-	if (ttl < 10) printf(" ");
-	printf("%i ", ttl);
-}
-
 void	ft_traceroute(_data *data, _op_vars *op_vars) {
-	char		packet[def_packet_size];
-	struct	iphdr	*iphdr_out, *iphdr_in;
+	char		packet_out[def_packet_size];
+	char		packet_in[def_packet_size];
 	struct	icmphdr	*icmphdr_out, *icmphdr_in;
+	struct	iphdr	*iphdr_out;
 	struct	sockaddr_in re_addr;
 
 
@@ -80,61 +76,75 @@ void	ft_traceroute(_data *data, _op_vars *op_vars) {
 	size_t		iphdr_len = sizeof(struct iphdr);
 	socklen_t		addr_len = sizeof(struct sockaddr_in);
 
+	uint16_t		seq;
 	uint8_t		query;
+	double		ttr;
+
+	memset(packet_out, 0, def_packet_size);
+	iphdr_out = (struct iphdr*)packet_out;
+	iphdr_out->version = 4;
+	iphdr_out->ihl = iphdr_len / 4;
+	iphdr_out->id = htons(op_vars->npid);
+	iphdr_out->tos = op_vars->tos;
+	iphdr_out->protocol = IPPROTO_ICMP;
+	iphdr_out->saddr = data->src.s_addr;
+	iphdr_out->daddr = data->dest.d_addr;
+	iphdr_out->tot_len = htons(iphdr_len + icmphdr_len + payload_size);
+
+
+	icmphdr_out = (struct icmphdr*)(packet_out + iphdr_len);
+	icmphdr_out->type = ICMP_ECHO;
+	icmphdr_out->un.echo.id = htons(op_vars->npid);
+
+	for (uint8_t cu_by = 0; cu_by < payload_size; cu_by += 2) {
+		memset(packet_out + iphdr_len + icmphdr_len + cu_by, payload_char_1, 1);
+		memset(packet_out + iphdr_len + icmphdr_len + cu_by + 1, payload_char_2, 1);
+	}
+
 
 	for (;;) {
-		memset(packet, 0, def_packet_size);
-		iphdr_out = (struct iphdr*)packet;
-		iphdr_out->version = 4;
-		iphdr_out->id = op_vars->npid;
-		iphdr_out->tos = op_vars->tos;
 		iphdr_out->ttl = op_vars->ttl;
-		iphdr_out->protocol = IPPROTO_ICMP;
-		iphdr_out->saddr = data->src.s_addr;
-		iphdr_out->daddr = data->dest.d_addr;
-
-		icmphdr_out = (struct icmphdr*)(packet + iphdr_len);
-		icmphdr_out->type = ICMP_ECHO;
-		icmphdr_out->un.echo.id = op_vars->npid;
-		memset(packet + iphdr_len + icmphdr_len, 'a', 64);
-		icmphdr_out->checksum = csum((unsigned short*)(packet + iphdr_len), (icmphdr_len+64)/2);
-
-		iphdr_out->ihl = iphdr_len / 4;
-		iphdr_out->tot_len = iphdr_len + icmphdr_len + 64;
-		iphdr_out->check = csum((unsigned short*)packet, iphdr_len/2);
-
 
 		memset(last_seen_ip, 0, max_addr_len);
-		for (query = 0; query < op_vars->nqueries; query += 1) {
-			memset(&re_addr, 0, sizeof(re_addr));
+		for (query=0, seq=1; query < op_vars->nqueries; query++, seq++) {
 
-			double ttr = _ping(data, packet, &re_addr);
+			iphdr_out->check = 0;
+			icmphdr_out->checksum = 0;
+			icmphdr_out->un.echo.sequence = htons(seq);
+			icmphdr_out->checksum = csum((unsigned short*)(packet_out + iphdr_len), (icmphdr_len+payload_size)/2);
+			iphdr_out->check = csum((unsigned short*)packet_out, iphdr_len/2);
+
+			memset(&re_addr, 0, addr_len);
+			ttr = _ping(data, packet_out, packet_in, &re_addr);
 			if (ttr < 0) return;
 
 			if (!query) 
 				print_ttl(op_vars->ttl);
 
-			res_ip = inet_ntoa(re_addr.sin_addr);
-			if (strcmp(last_seen_ip, res_ip)) {
-
-				if (!data->input.numeric
-					&& !getnameinfo((struct sockaddr*)&re_addr, addr_len,
-						hostname, max_hostname_len, NULL, 0, 0)) 
-					printf(" %s", hostname);
-				printf(" (%s)", res_ip);
+			if (!ttr) printf("  *");
+			else {
+				res_ip = inet_ntoa(re_addr.sin_addr);
+				if (strcmp(last_seen_ip, res_ip)) {
+					if (!data->input.numeric
+						&& !getnameinfo((struct sockaddr*)&re_addr, addr_len,
+							hostname, max_hostname_len, NULL, 0, 0)) 
+						printf(" %s", hostname);
+					printf(" (%s)", res_ip);
+				}
+				memcpy(last_seen_ip, res_ip, strlen(res_ip));
+				printf("  %0.3f ms", ttr);
 			}
-
-			memcpy(last_seen_ip, res_ip, strlen(res_ip));
-
-			printf("  %0.3f ms %c", ttr, query+1 == op_vars->nqueries ? '\n' : '\b');
+			printf(" %c", query+1 == op_vars->nqueries ? '\n' : '\b');
 		}
 
 		op_vars->ttl += 1;
 		if (op_vars->ttl >= op_vars->max_ttl)
 			break;
 
-		icmphdr_in = (struct icmphdr*)(packet + iphdr_len);
-		if (icmphdr_in->type == ICMP_ECHOREPLY)
-			break;
+		if (ttr) {
+			icmphdr_in = (struct icmphdr*)(packet_in + iphdr_len);
+			if (icmphdr_in->type == ICMP_ECHOREPLY)
+				break;
+		}
 	}
 }

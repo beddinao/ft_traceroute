@@ -29,11 +29,14 @@
 # define max_addr_len		0x10
 # define max_hostname_len		64
 # define def_max_ttl		30
-# define def_waittime		5
+# define def_waittime		1
 # define def_first_ttl		1
 # define def_nqueries		3
-# define max_nqueries_value		10
+# define max_nqueries_value		1000
 # define def_tos			0
+# define payload_char_1		0x13
+# define payload_char_2		0x37
+# define payload_size		64
 # define icmp_types			((const char*[]){ "echoreply", "", "", "destination_unreachable", "source_quench", "redirect_msg", "", "", "echo_request", "router_ad", "router_solic", "time_to_live_exceeded", "bad_ip_header", "timestamp", "timestamp_reply", "info_request", "info_reply", "addr_mask_request", "addr_mask_reply"})
 
 // ANSI COLORS
@@ -81,11 +84,11 @@ typedef	struct {
 	char		interface[max_interface_len];
 					// -i / --interface
 	char		src_addr[max_addr_len];
-					// -s / --source-addr
-	uint32_t		max_ttl;		// -m / --max-ttl
-	uint32_t		first_ttl;	// -f / --first-ttl
-	uint8_t		nqueries;		// -q / --nqueries
-	uint32_t		waittime;		// -w / --waittime
+					// -s / --source
+	uint8_t		max_ttl;		// -m / --max-hops
+	uint8_t		first_ttl;	// -f / --first
+	uint16_t		nqueries;		// -q / --queries
+	uint32_t		waittime;		// -w / --wait
 	uint8_t		tos;		// -t / --tos
 }	_options;
 
@@ -105,7 +108,7 @@ typedef	struct {
 	uint16_t		npid;
 	uint8_t		ttl;
 	uint8_t		max_ttl;
-	uint8_t		nqueries;
+	uint16_t		nqueries;
 	uint8_t		tos;
 	struct	timeval	waittime;
 }	_op_vars;
@@ -118,9 +121,8 @@ typedef	struct {
 }	_data;
 
 // print.c
+void	print_ttl(uint8_t);
 void	display_help();
-void	print_outgoing_packet();
-void	print_incoming_packet();
 
 // parse.c
 bool	parse_params(int, char**, _data*);

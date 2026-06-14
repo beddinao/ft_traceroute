@@ -51,7 +51,7 @@ bool	op_max_ttl(int c, char **v, int *current_arg, _data* data) {
 	long	max_ttl_nm = strtol(v[*current_arg], &endptr, 0xa);
 	if (errno == ERANGE
 		|| endptr == v[*current_arg] || *endptr != '\0'
-		|| max_ttl_nm < 0 || max_ttl_nm >= U32_MAX) {
+		|| max_ttl_nm <= 0 || max_ttl_nm >= U08_MAX) {
 		printf("invalid \"Max TTL\" value: %s\n", v[*current_arg]);
 		return False;
 	}
@@ -69,7 +69,7 @@ bool	op_first_ttl(int c, char **v, int *current_arg, _data *data) {
 	long	first_ttl_nm = strtol(v[*current_arg], &endptr, 0xa);
 	if (errno == ERANGE
 		|| endptr == v[*current_arg] || *endptr != '\0'
-		|| first_ttl_nm < 0 || first_ttl_nm > U32_MAX) {
+		|| first_ttl_nm < 0 || first_ttl_nm >= U08_MAX) {
 		printf("invalid \"First TTL\" value: %s\n", v[*current_arg]);
 		return False;
 	}
@@ -87,7 +87,7 @@ bool	op_nqueries(int c, char **v, int *current_arg, _data *data) {
 	long	nqueries_nm = strtol(v[*current_arg], &endptr, 0xa);
 	if (errno == ERANGE
 		|| endptr == v[*current_arg] || *endptr != '\0'
-		|| nqueries_nm < 0 || nqueries_nm > U08_MAX) {
+		|| nqueries_nm < 1 || nqueries_nm >= U16_MAX) {
 		printf("invalid \"N queries\" value: %s\n", v[*current_arg]);
 		return False;
 	}
@@ -140,8 +140,8 @@ bool parse_params(int c, char **v, _data *data) {
 	char	possible_one_char_param[0x3];
 	char	*one_char_args = "-n-i-s-m-f-q-w-t";
 	char	*full_name_args[0x8] = {
-		"--numeric", "--interface", "--source-addr", "--max-ttl",
-		"--first-ttl", "--nqueries", "--waittime", "--tos"
+		"--numeric", "--interface", "--source", "--max-hops",
+		"--first", "--queries", "--wait", "--tos"
 	};
 	bool	(*param_ops[0x9])(int, char**, int*, _data*) = {
 		op_numeric, op_interface, op_src_addr, op_max_ttl,

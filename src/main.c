@@ -77,7 +77,7 @@ void	set_op_vars(_data *data, _op_vars *op_vars) {
 	op_vars->max_ttl = data->input.is_set_max_ttl ? data->input.max_ttl : def_max_ttl;
 	op_vars->nqueries = data->input.is_set_nqueries ? data->input.nqueries : def_nqueries;
 	op_vars->tos = data->input.is_set_tos ? data->input.tos : def_tos;
-	op_vars->npid = htons(getpid());
+	op_vars->npid = getpid();
 }
 
 void	enable_ip_hdr_mnp(_data *data) {
