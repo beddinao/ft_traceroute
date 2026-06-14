@@ -56,8 +56,13 @@ double/*ms*/_ping(_data* data, char *packet, struct sockaddr_in *addr) {
 		return _ops_res;
 	}
 
-	return ((tend.tv_sec - tstart.tv_sec) * 1000)
-		+ ((tend.tv_usec - tstart.tv_usec) / 1000);
+	return ((double)(tend.tv_sec - tstart.tv_sec) * 1000)
+		+ ((double)(tend.tv_usec - tstart.tv_usec) / 1000);
+}
+
+void	print_ttl(uint8_t ttl) {
+	if (ttl < 10) printf(" ");
+	printf("%i ", ttl);
 }
 
 void	ft_traceroute(_data *data, _op_vars *op_vars) {
@@ -66,10 +71,17 @@ void	ft_traceroute(_data *data, _op_vars *op_vars) {
 	struct	icmphdr	*icmphdr_out, *icmphdr_in;
 	struct	sockaddr_in re_addr;
 
+
+	char		hostname[max_hostname_len];
+	char		last_seen_ip[max_addr_len];
+	char		*res_ip;
+
 	size_t		icmphdr_len = sizeof(struct icmphdr);
 	size_t		iphdr_len = sizeof(struct iphdr);
+	socklen_t		addr_len = sizeof(struct sockaddr_in);
 
 	uint8_t		query;
+
 	for (;;) {
 		memset(packet, 0, def_packet_size);
 		iphdr_out = (struct iphdr*)packet;
@@ -91,13 +103,30 @@ void	ft_traceroute(_data *data, _op_vars *op_vars) {
 		iphdr_out->tot_len = iphdr_len + icmphdr_len + 64;
 		iphdr_out->check = csum((unsigned short*)packet, iphdr_len/2);
 
+
+		memset(last_seen_ip, 0, max_addr_len);
 		for (query = 0; query < op_vars->nqueries; query += 1) {
 			memset(&re_addr, 0, sizeof(re_addr));
+
 			double ttr = _ping(data, packet, &re_addr);
 			if (ttr < 0) return;
-			if (!query)
-				printf(" %i  %s (%s)", op_vars->ttl, "test.com", "10.11.100.206");
-			printf("   %0.3f %c", ttr, query+1 == op_vars->nqueries ? '\n' : '\b');
+
+			if (!query) 
+				print_ttl(op_vars->ttl);
+
+			res_ip = inet_ntoa(re_addr.sin_addr);
+			if (strcmp(last_seen_ip, res_ip)) {
+
+				if (!data->input.numeric
+					&& !getnameinfo((struct sockaddr*)&re_addr, addr_len,
+						hostname, max_hostname_len, NULL, 0, 0)) 
+					printf(" %s", hostname);
+				printf(" (%s)", res_ip);
+			}
+
+			memcpy(last_seen_ip, res_ip, strlen(res_ip));
+
+			printf("  %0.3f ms %c", ttr, query+1 == op_vars->nqueries ? '\n' : '\b');
 		}
 
 		op_vars->ttl += 1;

@@ -27,6 +27,7 @@
 # define def_packet_size		4000
 # define max_interface_len		0x10	
 # define max_addr_len		0x10
+# define max_hostname_len		64
 # define def_max_ttl		30
 # define def_waittime		5
 # define def_first_ttl		1
