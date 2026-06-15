@@ -140,6 +140,7 @@ size_t	ft_strlen(const char*);
 
 // print.c
 void	print_ttl(uint8_t);
+void	print_header_intro(_data*, _op_vars*, char*);
 void	display_help();
 
 // parse.c

@@ -53,3 +53,10 @@ void	print_ttl(uint8_t ttl) {
 	if (ttl < 10) printf(" ");
 	printf("%i ", ttl);
 }
+
+void	print_header_intro(_data *data, _op_vars* op_vars, char* tar) {
+	printf("ft_traceroute to");
+	if (!data->input.numeric)
+		printf(" %s", tar);
+	printf(" (%s), %i hops max, %i byte packets\n", data->dest.ip, op_vars->max_ttl, payload_size);
+}

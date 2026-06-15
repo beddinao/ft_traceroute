@@ -151,6 +151,7 @@ int main(int c, char **v) {
 	
 	set_op_vars(&data, &op_vars);
 	enable_ip_hdr_mnp(&data);
+	print_header_intro(&data, &op_vars, v[c-1]);
 	ft_traceroute(&data, &op_vars);
 	return gracefull_exit(&data);
 }
