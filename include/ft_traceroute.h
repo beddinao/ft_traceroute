@@ -49,6 +49,7 @@
 # define payload_char_1		0x13
 # define payload_char_2		0x37
 # define payload_size		64
+# define value_params_size		0x8
 # define icmp_types			((const char*[]){ "echoreply", "", "", "destination_unreachable", "source_quench", "redirect_msg", "", "", "echo_request", "router_ad", "router_solic", "time_to_live_exceeded", "bad_ip_header", "timestamp", "timestamp_reply", "info_request", "info_reply", "addr_mask_request", "addr_mask_reply"})
 
 // ANSI COLORS
