@@ -15,14 +15,14 @@
 bool	validate_source_addr(_data *data) {
 	if (inet_pton(AF_INET, data->input.src_addr, &data->src.s_addr) <= 0) {
 		printf("ft_traceroute: invalid IPv4 source address: %s\n", data->input.src_addr);
-		return False;
+		return false;
 	}
 	char	*found_addr;
-	bool	found_it = False;
+	bool	found_it = false;
 	struct	ifaddrs	*o_ifa_list, *u_ifa_list;	
 	if (getifaddrs(&o_ifa_list)) {
 		perror("ft_traceroute: getifaddrs()");
-		return False;
+		return false;
 	}
 	u_ifa_list = o_ifa_list;
 	for(; u_ifa_list->ifa_next != NULL; u_ifa_list = u_ifa_list->ifa_next) {
@@ -31,7 +31,7 @@ bool	validate_source_addr(_data *data) {
 			continue;
 		found_addr = inet_ntoa(((struct sockaddr_in*)u_ifa_list->ifa_addr)->sin_addr), data->input.src_addr;
 		if (found_addr && !ft_strcmp(data->input.src_addr, found_addr)) {
-			found_it = True;
+			found_it = true;
 			break;
 		}
 	}
@@ -53,13 +53,13 @@ bool	resolve_dest_addr(char *host, _data* data) {
 	i = getaddrinfo(host, NULL, &hints, &data->dest.addr);
 	if (i != 0 || !data->dest.addr) {
 		printf("ft_traceroute: %s: Name or service not known\n", host);
-		return False;
+		return false;
 	}
 
 	_ip = inet_ntoa(((struct sockaddr_in*)data->dest.addr->ai_addr)->sin_addr);
 	data->dest.d_addr = ((struct sockaddr_in*)data->dest.addr->ai_addr)->sin_addr.s_addr;
 	ft_memcpy(data->dest.ip, _ip, ft_strlen(_ip));
-	return True;
+	return true;
 }
 
 bool	resolve_src_addr(_data *data) {
@@ -71,11 +71,11 @@ bool	resolve_src_addr(_data *data) {
 	if (data->input.is_set_interface) 
 		ft_memcpy(interface.ifr_name, data->input.interface, ft_strlen(data->input.interface));
 	else {
-		bool	found_it = False;
+		bool	found_it = false;
 		struct	ifaddrs	*o_ifa_list, *u_ifa_list;
 		if (getifaddrs(&o_ifa_list)) {
 			perror("ft_traceroute: getifaddrs()");
-			return False;
+			return false;
 		}
 		u_ifa_list = o_ifa_list;
 		for (; u_ifa_list->ifa_next != NULL; u_ifa_list = u_ifa_list->ifa_next) {
@@ -83,13 +83,13 @@ bool	resolve_src_addr(_data *data) {
 				|| u_ifa_list->ifa_addr->sa_family != AF_INET)
 				continue;
 			ft_memcpy(interface.ifr_name, u_ifa_list->ifa_name, ft_strlen(u_ifa_list->ifa_name));
-			found_it = True;
+			found_it = true;
 			break;
 		}
 		freeifaddrs(o_ifa_list);
 		if (!found_it) {
 			printf("ft_traceroute: could not find a usable IPv4 interface!!\n");
-			return False;
+			return false;
 		}
 	}
 	
@@ -97,12 +97,12 @@ bool	resolve_src_addr(_data *data) {
 		if (data->input.is_set_interface)
 			printf("ft_traceroute: invalid interface: %s\n", data->input.interface);
 		else	perror("ft_traceroute: ioctl()");
-		return False;
+		return false;
 	}
 	char *_ip = inet_ntoa(((struct sockaddr_in*)&interface.ifr_addr)->sin_addr);
 	data->src.s_addr = ((struct sockaddr_in*)&interface.ifr_addr)->sin_addr.s_addr;
 	ft_memcpy(data->src.ip, _ip, ft_strlen(_ip));
-	return True;
+	return true;
 }
 
 void	set_op_vars(_data *data, _op_vars *op_vars) {

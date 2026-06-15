@@ -31,6 +31,7 @@
 # include <ifaddrs.h>
 # include <net/if.h>
 # include <sys/ioctl.h>
+# include <stdbool.h>
 
 // GENERAL PURPOSE MACROS
 # define ft_traceroute_version	"0x1 <foundations.>"
@@ -68,16 +69,6 @@
 # define U32_MAX		0xffffffff
 # define U16_MAX		0xffff
 # define U08_MAX		0xff
-
-# ifndef True 
-# define True 		1
-# endif
-
-# ifndef False
-# define False		0
-# endif
-
-typedef	int	bool;
 
 typedef	struct {
 	bool		version;		// -V / --version
