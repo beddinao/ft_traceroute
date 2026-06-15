@@ -27,7 +27,6 @@
 # include <unistd.h>
 # include <sys/select.h>
 # include <errno.h>
-# include <signal.h>
 # include <sys/time.h>
 # include <ifaddrs.h>
 # include <net/if.h>

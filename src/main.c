@@ -129,10 +129,6 @@ bool	check_root_privileges(uid_t r, uid_t e, uid_t s) {
 	return getresuid(&r, &e, &s) < 0 || e;
 }
 
-void	signal_handler(int sig_num) {
-	exit(sig_num);
-}
-
 bool	gracefull_exit(_data *data) {
 	if (data->sock > 0)
 		close(data->sock);
@@ -155,10 +151,6 @@ int main(int c, char **v) {
 		display_help();
 		return 1;
 	}
-
-	signal(SIGINT, signal_handler);
-	signal(SIGQUIT, signal_handler);
-	signal(SIGPIPE, SIG_IGN);
 
 	data.sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 	if (data.sock < 0) {
