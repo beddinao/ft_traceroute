@@ -12,6 +12,35 @@
 
 #include <ft_traceroute.h>
 
+bool	validate_source_addr(_data *data) {
+	if (inet_pton(AF_INET, data->input.src_addr, &data->src.s_addr) <= 0) {
+		printf("ft_traceroute: invalid IPv4 source address: %s\n", data->input.src_addr);
+		return False;
+	}
+	char	*found_addr;
+	bool	found_it = False;
+	struct	ifaddrs	*o_ifa_list, *u_ifa_list;	
+	if (getifaddrs(&o_ifa_list)) {
+		perror("ft_traceroute: getifaddrs()");
+		return False;
+	}
+	u_ifa_list = o_ifa_list;
+	for(; u_ifa_list->ifa_next != NULL; u_ifa_list = u_ifa_list->ifa_next) {
+		if (u_ifa_list->ifa_flags & IFF_LOOPBACK || !(u_ifa_list->ifa_flags & IFF_UP)
+			|| u_ifa_list->ifa_addr->sa_family != AF_INET)
+			continue;
+		found_addr = inet_ntoa(((struct sockaddr_in*)u_ifa_list->ifa_addr)->sin_addr), data->input.src_addr;
+		if (found_addr && !ft_strcmp(data->input.src_addr, found_addr)) {
+			found_it = True;
+			break;
+		}
+	}
+	freeifaddrs(o_ifa_list);
+	if (!found_it)
+		printf("ft_traceroute: that source does not belong to a valid interface\n");
+	return found_it;
+}
+
 bool	resolve_dest_addr(char *host, _data* data) {
 	struct	addrinfo	hints;
 	char		*_ip;
@@ -34,14 +63,9 @@ bool	resolve_dest_addr(char *host, _data* data) {
 }
 
 bool	resolve_src_addr(_data *data) {
-	if (data->input.is_set_src_addr) {
-		data->src.s_addr = inet_addr(data->input.src_addr);
-		if (data->src.s_addr < 0) {
-			printf("ft_traceroute: invalid source addr: %s\n", data->input.src_addr);
-			return False;
-		}
-		return True;
-	}
+	if (data->input.is_set_src_addr) 
+		return validate_source_addr(data);
+
 	struct	ifreq	interface;
 	ft_memset(&interface, 0, sizeof(interface));
 	if (data->input.is_set_interface) 
@@ -49,7 +73,7 @@ bool	resolve_src_addr(_data *data) {
 	else {
 		bool	found_it = False;
 		struct	ifaddrs	*o_ifa_list, *u_ifa_list;
-		if (getifaddrs(&o_ifa_list) < 0) {
+		if (getifaddrs(&o_ifa_list)) {
 			perror("ft_traceroute: getifaddrs()");
 			return False;
 		}
