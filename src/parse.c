@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parse.c                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: beddinao <beddinao@student.1337.ma>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/06/13 01:16:14 by beddinao          #+#    #+#             */
+/*   Updated: 2026/06/14 19:18:01 by beddinao         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include <ft_traceroute.h>
 
 bool 	op_general_check(bool op_var) {
@@ -15,14 +27,14 @@ bool 	op_interface(int c, char **v, int *current_arg, _data* data) {
 		|| c - (*current_arg + 1) < 2) return False;
 
 	(*current_arg)++;
-	size_t	inp_size = strlen(v[*current_arg]);
+	size_t	inp_size = ft_strlen(v[*current_arg]);
 	if (inp_size > max_interface_len) {
 		printf("invalid \"Interface\" value: %s\n", v[*current_arg]);
 		return False;
 	}
 
 	data->input.is_set_interface = True;
-	memcpy(data->input.interface, v[*current_arg], inp_size);
+	ft_memcpy(data->input.interface, v[*current_arg], inp_size);
 	return True;
 }
 
@@ -31,14 +43,14 @@ bool 	op_src_addr(int c, char **v, int *current_arg, _data* data) {
 		|| c - (*current_arg + 1) < 2) return False;
 
 	(*current_arg)++;
-	size_t	inp_len = strlen(v[*current_arg]);
+	size_t	inp_len = ft_strlen(v[*current_arg]);
 	if (inp_len > max_addr_len) {
 		printf("invalid \"Source Address\" value: %s\n", v[*current_arg]);
 		return False;
 	}
 
 	data->input.is_set_src_addr = True;
-	memcpy(data->input.src_addr, v[*current_arg], inp_len);
+	ft_memcpy(data->input.src_addr, v[*current_arg], inp_len);
 	return True;
 }
 
@@ -149,11 +161,11 @@ bool parse_params(int c, char **v, _data *data) {
 	};
 
 
-	if (c == 2 && (!strcmp(v[c-1], "-V") || !strcmp(v[c-1], "--version"))) {
+	if (c == 2 && (!ft_strcmp(v[c-1], "-V") || !ft_strcmp(v[c-1], "--version"))) {
 		printf("ft_traceroute: %s\n\n", ft_traceroute_version);
 		exit(False);
 	}
-	else if (c == 2 && (!strcmp(v[c-1], "-?") || !strcmp(v[c-1], "--help")))
+	else if (c == 2 && (!ft_strcmp(v[c-1], "-?") || !ft_strcmp(v[c-1], "--help")))
 		return False;
 
 	for (int current_arg = 1; current_arg < c - 1; current_arg+=1) {
@@ -162,8 +174,8 @@ bool parse_params(int c, char **v, _data *data) {
 			possible_one_char_param[0] = one_char_args[current_possible_param*2];
 			possible_one_char_param[1] = one_char_args[current_possible_param*2+1];
 			possible_one_char_param[2] = '\0';
-			if (!strcmp(v[current_arg], full_name_args[current_possible_param])
-				|| !strcmp(v[current_arg], possible_one_char_param)) {
+			if (!ft_strcmp(v[current_arg], full_name_args[current_possible_param])
+				|| !ft_strcmp(v[current_arg], possible_one_char_param)) {
 				valid_arg = param_ops[current_possible_param](c, v, &current_arg, data);
 				break;
 			}

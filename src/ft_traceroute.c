@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ft_traceroute.c                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: beddinao <beddinao@student.1337.ma>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/06/13 01:16:14 by beddinao          #+#    #+#             */
+/*   Updated: 2026/06/14 19:18:01 by beddinao         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include <ft_traceroute.h>
 
 unsigned short csum(unsigned short *buff, int words_n) {
@@ -43,7 +55,7 @@ double/*ms*/_ping(_data* data, char *packet_out, char *packet_in, struct sockadd
 		return _ops_res;
 	gettimeofday(&tend, NULL);
 
-	memset(packet_in, 0, sizeof(def_packet_size));
+	ft_memset(packet_in, 0, sizeof(def_packet_size));
 	_ops_res = recvfrom(
 			data->sock,
 			packet_in,
@@ -80,7 +92,7 @@ void	ft_traceroute(_data *data, _op_vars *op_vars) {
 	uint8_t		query;
 	double		ttr;
 
-	memset(packet_out, 0, def_packet_size);
+	ft_memset(packet_out, 0, def_packet_size);
 	iphdr_out = (struct iphdr*)packet_out;
 	iphdr_out->version = 4;
 	iphdr_out->ihl = iphdr_len / 4;
@@ -97,15 +109,15 @@ void	ft_traceroute(_data *data, _op_vars *op_vars) {
 	icmphdr_out->un.echo.id = htons(op_vars->npid);
 
 	for (uint8_t cu_by = 0; cu_by < payload_size; cu_by += 2) {
-		memset(packet_out + iphdr_len + icmphdr_len + cu_by, payload_char_1, 1);
-		memset(packet_out + iphdr_len + icmphdr_len + cu_by + 1, payload_char_2, 1);
+		ft_memset(packet_out + iphdr_len + icmphdr_len + cu_by, payload_char_1, 1);
+		ft_memset(packet_out + iphdr_len + icmphdr_len + cu_by + 1, payload_char_2, 1);
 	}
 
 
 	for (;;) {
 		iphdr_out->ttl = op_vars->ttl;
 
-		memset(last_seen_ip, 0, max_addr_len);
+		ft_memset(last_seen_ip, 0, max_addr_len);
 		for (query=0, seq=1; query < op_vars->nqueries; query++, seq++) {
 
 			iphdr_out->check = 0;
@@ -114,7 +126,7 @@ void	ft_traceroute(_data *data, _op_vars *op_vars) {
 			icmphdr_out->checksum = csum((unsigned short*)(packet_out + iphdr_len), (icmphdr_len+payload_size)/2);
 			iphdr_out->check = csum((unsigned short*)packet_out, iphdr_len/2);
 
-			memset(&re_addr, 0, addr_len);
+			ft_memset(&re_addr, 0, addr_len);
 			ttr = _ping(data, packet_out, packet_in, &re_addr);
 			if (ttr < 0) return;
 
@@ -124,14 +136,14 @@ void	ft_traceroute(_data *data, _op_vars *op_vars) {
 			if (!ttr) printf("  *");
 			else {
 				res_ip = inet_ntoa(re_addr.sin_addr);
-				if (strcmp(last_seen_ip, res_ip)) {
+				if (ft_strcmp(last_seen_ip, res_ip)) {
 					if (!data->input.numeric
 						&& !getnameinfo((struct sockaddr*)&re_addr, addr_len,
 							hostname, max_hostname_len, NULL, 0, 0)) 
 						printf(" %s", hostname);
 					printf(" (%s)", res_ip);
 				}
-				memcpy(last_seen_ip, res_ip, strlen(res_ip));
+				ft_memcpy(last_seen_ip, res_ip, ft_strlen(res_ip));
 				printf("  %0.3f ms", ttr);
 			}
 			printf(" %c", query+1 == op_vars->nqueries ? '\n' : '\b');

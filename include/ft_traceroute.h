@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ft_traceroute.h                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: beddinao <beddinao@student.1337.ma>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/06/13 01:16:14 by beddinao          #+#    #+#             */
+/*   Updated: 2026/06/14 19:18:01 by beddinao         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef FT_TRACEROUTE_
 # define FT_TRACEROUTE
 
@@ -119,6 +131,12 @@ typedef	struct {
 	_dest		dest;
 	_options		input;
 }	_data;
+
+// utils.c
+void	*ft_memcpy(void*, const void*, size_t);
+void	*ft_memset(void*, int, size_t);
+int	ft_strcmp(const void*, const void*);
+size_t	ft_strlen(const char*);
 
 // print.c
 void	print_ttl(uint8_t);

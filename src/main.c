@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: beddinao <beddinao@student.1337.ma>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/06/13 01:16:14 by beddinao          #+#    #+#             */
+/*   Updated: 2026/06/14 19:18:01 by beddinao         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include <ft_traceroute.h>
 
 bool	resolve_dest_addr(char *host, _data* data) {
@@ -5,7 +17,7 @@ bool	resolve_dest_addr(char *host, _data* data) {
 	char		*_ip;
 	int		i;
 	
-	memset(&hints, 0, sizeof(hints));
+	ft_memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_RAW;
 	hints.ai_flags = AI_PASSIVE|AI_CANONNAME;
@@ -17,8 +29,7 @@ bool	resolve_dest_addr(char *host, _data* data) {
 
 	_ip = inet_ntoa(((struct sockaddr_in*)data->dest.addr->ai_addr)->sin_addr);
 	data->dest.d_addr = ((struct sockaddr_in*)data->dest.addr->ai_addr)->sin_addr.s_addr;
-	memcpy(data->dest.ip, _ip, strlen(_ip));
-	printf("resolved destination: %s\n", data->dest.ip);
+	ft_memcpy(data->dest.ip, _ip, ft_strlen(_ip));
 	return True;
 }
 
@@ -32,9 +43,9 @@ bool	resolve_src_addr(_data *data) {
 		return True;
 	}
 	struct	ifreq	interface;
-	memset(&interface, 0, sizeof(interface));
+	ft_memset(&interface, 0, sizeof(interface));
 	if (data->input.is_set_interface) 
-		memcpy(interface.ifr_name, data->input.interface, strlen(data->input.interface));
+		ft_memcpy(interface.ifr_name, data->input.interface, ft_strlen(data->input.interface));
 	else {
 		bool	found_it = False;
 		struct	ifaddrs	*o_ifa_list, *u_ifa_list;
@@ -47,7 +58,7 @@ bool	resolve_src_addr(_data *data) {
 			if (u_ifa_list->ifa_flags & IFF_LOOPBACK || !(u_ifa_list->ifa_flags & IFF_UP)
 				|| u_ifa_list->ifa_addr->sa_family != AF_INET)
 				continue;
-			memcpy(interface.ifr_name, u_ifa_list->ifa_name, strlen(u_ifa_list->ifa_name));
+			ft_memcpy(interface.ifr_name, u_ifa_list->ifa_name, ft_strlen(u_ifa_list->ifa_name));
 			found_it = True;
 			break;
 		}
@@ -66,8 +77,7 @@ bool	resolve_src_addr(_data *data) {
 	}
 	char *_ip = inet_ntoa(((struct sockaddr_in*)&interface.ifr_addr)->sin_addr);
 	data->src.s_addr = ((struct sockaddr_in*)&interface.ifr_addr)->sin_addr.s_addr;
-	memcpy(data->src.ip, _ip, strlen(_ip));
-	printf("resolved source: %s\n", data->src.ip);
+	ft_memcpy(data->src.ip, _ip, ft_strlen(_ip));
 	return True;
 }
 
@@ -114,7 +124,7 @@ int main(int c, char **v) {
 	}
 
 	_data	data;
-	memset(&data, 0, sizeof(_data));
+	ft_memset(&data, 0, sizeof(_data));
 
 	if (c < 2 || c > 0xff
 		|| (c >= 2 && !parse_params(c, v, &data))) {
@@ -137,7 +147,7 @@ int main(int c, char **v) {
 		return 1;
 
 	_op_vars		op_vars;
-	memset(&op_vars, 0, sizeof(op_vars));
+	ft_memset(&op_vars, 0, sizeof(op_vars));
 	
 	set_op_vars(&data, &op_vars);
 	enable_ip_hdr_mnp(&data);
