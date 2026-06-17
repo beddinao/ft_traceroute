@@ -1,18 +1,8 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   main.c                                             :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: beddinao <beddinao@student.1337.ma>        +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/06/13 01:16:14 by beddinao          #+#    #+#             */
-/*   Updated: 2026/06/14 19:18:01 by beddinao         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include <ft_traceroute.h>
 
 bool	validate_source_addr(_data *data) {
+	if (data->input.verbose)
+		{print_current_time(); printf(" Detected Source Address, Validating...\n");}
 	if (inet_pton(AF_INET, data->input.src_addr, &data->src.s_addr) <= 0) {
 		printf("ft_traceroute: invalid IPv4 source address: %s\n", data->input.src_addr);
 		return false;
@@ -30,14 +20,25 @@ bool	validate_source_addr(_data *data) {
 			|| u_ifa_list->ifa_addr->sa_family != AF_INET)
 			continue;
 		found_addr = inet_ntoa(((struct sockaddr_in*)u_ifa_list->ifa_addr)->sin_addr), data->input.src_addr;
+		if (data->input.verbose) {
+			print_current_time();
+			printf(" Found a valid local IPv4 Interface %s (%s) checking Compatiblity..\n", u_ifa_list->ifa_name, found_addr);
+			print_current_time(); printf(" Conditions to apply: [IFF_UP], ![IFF_LOOPBACK], [IFF.sa_family:AF_INET(IPv4)]\n");
+		}
 		if (found_addr && !ft_strcmp(data->input.src_addr, found_addr)) {
+			if (data->input.verbose) {
+				print_current_time();
+				printf(" Given Address matches the Interface \"%s\", Using it!\n", u_ifa_list->ifa_name);
+			}
 			found_it = true;
 			break;
 		}
 	}
 	freeifaddrs(o_ifa_list);
-	if (!found_it)
-		printf("ft_traceroute: that source does not belong to a valid interface\n");
+	if (!found_it) {
+		print_current_time();
+		printf(" ft_traceroute: that Source Address does not belong to a valid interface\n");
+	}
 	return found_it;
 }
 
@@ -68,11 +69,21 @@ bool	resolve_src_addr(_data *data) {
 
 	struct	ifreq	interface;
 	ft_memset(&interface, 0, sizeof(interface));
-	if (data->input.is_set_interface) 
+	if (data->input.is_set_interface) { 
+		if (data->input.verbose) {
+			print_current_time();
+			printf(" Detected given Interface \"%s\", using it!!\n", data->input.interface);
+		}
 		ft_memcpy(interface.ifr_name, data->input.interface, ft_strlen(data->input.interface));
+	}
 	else {
 		bool	found_it = false;
 		struct	ifaddrs	*o_ifa_list, *u_ifa_list;
+		if (data->input.verbose) {
+			print_current_time(); printf(" No Source Addr/Interface were given\n");
+			print_current_time(); printf(" Looking for a valid Interface on this System..\n");
+			print_current_time(); printf(" Conditions to apply: [IFF_UP], ![IFF_LOOPBACK], [IFF.sa_family:AF_INET(IPv4)]\n");
+		}
 		if (getifaddrs(&o_ifa_list)) {
 			perror("ft_traceroute: getifaddrs()");
 			return false;
@@ -83,35 +94,51 @@ bool	resolve_src_addr(_data *data) {
 				|| u_ifa_list->ifa_addr->sa_family != AF_INET)
 				continue;
 			ft_memcpy(interface.ifr_name, u_ifa_list->ifa_name, ft_strlen(u_ifa_list->ifa_name));
+			if (data->input.verbose) {
+				print_current_time();
+				printf(" Found a Valid IPv4 Interface \"%s\"\n", u_ifa_list->ifa_name);
+			}
 			found_it = true;
 			break;
 		}
 		freeifaddrs(o_ifa_list);
 		if (!found_it) {
+			print_current_time();
 			printf("ft_traceroute: could not find a usable IPv4 interface!!\n");
 			return false;
 		}
 	}
 	
 	if (ioctl(data->sock, SIOCGIFADDR, &interface) != 0) {
-		if (data->input.is_set_interface)
-			printf("ft_traceroute: invalid interface: %s\n", data->input.interface);
-		else	perror("ft_traceroute: ioctl()");
+		print_current_time();
+		if (data->input.is_set_interface) 
+			printf(" ft_traceroute: invalid interface: %s\n", data->input.interface);
+		else	perror(" ft_traceroute: ioctl()");
 		return false;
 	}
 	char *_ip = inet_ntoa(((struct sockaddr_in*)&interface.ifr_addr)->sin_addr);
 	data->src.s_addr = ((struct sockaddr_in*)&interface.ifr_addr)->sin_addr.s_addr;
 	ft_memcpy(data->src.ip, _ip, ft_strlen(_ip));
+	if (data->input.verbose) {
+		print_current_time();
+		printf(" Resolved \"%s\" Address: %s\n", interface.ifr_name, data->src.ip);
+	}
 	return true;
 }
 
 void	set_op_vars(_data *data, _op_vars *op_vars) {
-	op_vars->waittime.tv_sec = data->input.is_set_waittime ? data->input.waittime : def_waittime;
 	op_vars->ttl = data->input.is_set_first_ttl ? data->input.first_ttl : def_first_ttl;
 	op_vars->max_ttl = data->input.is_set_max_ttl ? data->input.max_ttl : def_max_ttl;
 	op_vars->nqueries = data->input.is_set_nqueries ? data->input.nqueries : def_nqueries;
 	op_vars->tos = data->input.is_set_tos ? data->input.tos : def_tos;
-	op_vars->waittime.tv_sec = data->input.is_set_waittime ? data->input.waittime : def_waittime;
+	op_vars->waittime = data->input.is_set_waittime ? data->input.waittime*1000 : def_waittime*1000;
+	/*
+		op_vars->waittime<uint64_t> max: 0xffffffffffffffff 18446744073709551615
+		data->input.waittime<uint32_t> max: 0xffffffff 4294967295
+		uint32_t max * 1000 = 4.2949673 * (10 ** 12) == 4294967299999.9995 < 18446744073709551615
+		so that operation "uint32_t * 1000 stored in a uint64_t" is safe;
+
+	 */
 	op_vars->npid = getpid();
 }
 

@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   parse.c                                            :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: beddinao <beddinao@student.1337.ma>        +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/06/13 01:16:14 by beddinao          #+#    #+#             */
-/*   Updated: 2026/06/14 19:18:01 by beddinao         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include <ft_traceroute.h>
 
 bool 	op_general_check(bool op_var) {
@@ -19,6 +7,12 @@ bool 	op_general_check(bool op_var) {
 bool	op_numeric(int c, char **v, int *current_arg, _data* data) {
 	if (op_general_check(data->input.numeric)) return false;
 	data->input.numeric = true;
+	return true;
+}
+
+bool	op_verbose(int c, char **v, int *current_arg, _data* data) {
+	if (op_general_check(data->input.verbose)) return false;
+	data->input.verbose = true;
 	return true;
 }
 
@@ -150,13 +144,13 @@ bool parse_params(int c, char **v, _data *data) {
 
 	bool	valid_arg;
 	char	possible_one_char_param[0x3];
-	char	*one_char_args = "-n-i-s-m-f-q-w-t";
+	char	*one_char_args = "-v-n-i-s-m-f-q-w-t";
 	char	*full_name_args[value_params_size] = {
-		"--numeric", "--interface", "--source", "--max-hops",
+		"--verbose", "--numeric", "--interface", "--source", "--max-hops",
 		"--first", "--queries", "--wait", "--tos"
 	};
 	bool	(*param_ops[value_params_size])(int, char**, int*, _data*) = {
-		op_numeric, op_interface, op_src_addr, op_max_ttl,
+		op_verbose, op_numeric, op_interface, op_src_addr, op_max_ttl,
 		op_first_ttl, op_nqueries, op_waittime, op_tos
 	};
 

@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ft_traceroute.h                                    :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: beddinao <beddinao@student.1337.ma>        +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/06/13 01:16:14 by beddinao          #+#    #+#             */
-/*   Updated: 2026/06/14 19:18:01 by beddinao         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef FT_TRACEROUTE_
 # define FT_TRACEROUTE
 
@@ -32,6 +20,7 @@
 # include <net/if.h>
 # include <sys/ioctl.h>
 # include <stdbool.h>
+# include <time.h>
 
 // GENERAL PURPOSE MACROS
 # define ft_traceroute_version	"0x1 <foundations.>"
@@ -49,7 +38,7 @@
 # define payload_char_1		0x13
 # define payload_char_2		0x37
 # define payload_size		64
-# define value_params_size		0x8
+# define value_params_size		0x9
 # define icmp_types			((const char*[]){ "echoreply", "", "", "destination_unreachable", "source_quench", "redirect_msg", "", "", "echo_request", "router_ad", "router_solic", "time_to_live_exceeded", "bad_ip_header", "timestamp", "timestamp_reply", "info_request", "info_reply", "addr_mask_request", "addr_mask_reply"})
 
 // ANSI COLORS
@@ -74,6 +63,7 @@
 typedef	struct {
 	bool		version;		// -V / --version
 	bool		help;		// -? / --help
+	bool		verbose;		// -v / --verbose
 	bool		numeric;		// -n / --numeric
 	//
 	bool		is_set_interface;
@@ -113,7 +103,8 @@ typedef	struct {
 	uint8_t		max_ttl;
 	uint16_t		nqueries;
 	uint8_t		tos;
-	struct	timeval	waittime;
+	uint64_t		waittime;
+	bool		verbose;
 }	_op_vars;
 
 typedef	struct {
@@ -130,6 +121,9 @@ int	ft_strcmp(const void*, const void*);
 size_t	ft_strlen(const char*);
 
 // print.c
+void	print_current_time();
+void	dump_in_packet(_data*, unsigned char*, struct sockaddr_in*);
+void	dump_out_packet(_data*, unsigned char*, struct sockaddr_in*);
 void	print_ttl(uint8_t);
 void	print_header_intro(_data*, _op_vars*, char*);
 void	display_help();
