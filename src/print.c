@@ -34,6 +34,7 @@ void	display_help() {
 	printf("                              the default is %i\n\n", def_tos);
 	printf("  -n --numeric                do not try to map IP addr to host names\n");
 	printf("  -V --version                prints version and exits\n");
+	printf("  -v --verbose                be verbose\n");
 	printf("  -? --help                   shows this help and exits\n\n");
 }
 
