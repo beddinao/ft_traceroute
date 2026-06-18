@@ -1,7 +1,12 @@
 #include <ft_traceroute.h>
 
+void	display_usage() {
+	printf("Usage\n  ft_traceroute [options] <destination>\n");
+}
+
 void	display_help() {
-	printf("\nUsage\n  ft_traceroute [options] <destination>\n");
+	printf("\n");
+	display_usage();
 	printf("\nOptions:\n");
 	printf("  <destination>               dns name or ip address\n");
 	printf("  -i --interface <ifr>\n");

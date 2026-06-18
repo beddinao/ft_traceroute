@@ -4,6 +4,7 @@ bool	validate_source_addr(_data *data) {
 	if (data->input.verbose)
 		{print_current_time(); printf(" Detected Source Address, Validating...\n");}
 	if (inet_pton(AF_INET, data->input.src_addr, &data->src.s_addr) <= 0) {
+		print_current_time();
 		printf("ft_traceroute: invalid IPv4 source address: %s\n", data->input.src_addr);
 		return false;
 	}
@@ -174,8 +175,12 @@ int main(int c, char **v) {
 	_data	data;
 	ft_memset(&data, 0, sizeof(_data));
 
-	if (c < 2 || c > 0xff
-		|| (c >= 2 && !parse_params(c, v, &data))) {
+	if (c < 2 || c > 0xff) {
+		display_usage();
+		return 1;
+	}
+
+	if (c >= 2 && !parse_params(c, v, &data)) {
 		display_help();
 		return 1;
 	}
@@ -186,9 +191,13 @@ int main(int c, char **v) {
 		return 1;
 	}
 
-	if (!resolve_dest_addr(v[c-1], &data)
-		|| !resolve_src_addr(&data))
+	if (!resolve_dest_addr(v[c-1], &data)) {
+		close(data.sock);
 		return 1;
+	}
+
+	if (!resolve_src_addr(&data))
+		return gracefull_exit(&data);
 
 	_op_vars		op_vars;
 	ft_memset(&op_vars, 0, sizeof(op_vars));

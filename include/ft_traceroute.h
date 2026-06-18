@@ -126,6 +126,7 @@ void	dump_in_packet(_data*, unsigned char*, struct sockaddr_in*);
 void	dump_out_packet(_data*, unsigned char*, struct sockaddr_in*);
 void	print_ttl(uint8_t);
 void	print_header_intro(_data*, _op_vars*, char*);
+void	display_usage();
 void	display_help();
 
 // parse.c
