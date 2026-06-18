@@ -61,6 +61,10 @@ bool	op_max_ttl(int c, char **v, int *current_arg, _data* data) {
 		printf("invalid \"Max TTL\" value: %s\n", v[*current_arg]);
 		return false;
 	}
+	if (data->input.is_set_first_ttl && data->input.first_ttl > max_ttl_nm) {
+		printf("first TTL is out of Range(--max-hops)\n");
+		return false;
+	}
 	data->input.is_set_max_ttl = true;
 	data->input.max_ttl = max_ttl_nm;
 	return true;
@@ -77,6 +81,10 @@ bool	op_first_ttl(int c, char **v, int *current_arg, _data *data) {
 		|| endptr == v[*current_arg] || *endptr != '\0'
 		|| first_ttl_nm < 0 || first_ttl_nm >= U08_MAX) {
 		printf("invalid \"First TTL\" value: %s\n", v[*current_arg]);
+		return false;
+	}
+	if (data->input.is_set_max_ttl && first_ttl_nm > data->input.max_ttl) {
+		printf("first TTL is out of Range(--max-hops)\n");
 		return false;
 	}
 	data->input.is_set_first_ttl = true;
